@@ -4,7 +4,7 @@
 // - protoc             v4.25.3
 // source: driver.proto
 
-package grpcapi
+package _go
 
 import (
 	context "context"
@@ -20,8 +20,8 @@ import (
 const _ = grpc.SupportPackageIsVersion7
 
 const (
-	Driver_StartJob_FullMethodName  = "/grpcapi.Driver/StartJob"
-	Driver_CancelJob_FullMethodName = "/grpcapi.Driver/CancelJob"
+	Driver_StartJob_FullMethodName  = "/driver.Driver/StartJob"
+	Driver_CancelJob_FullMethodName = "/driver.Driver/CancelJob"
 )
 
 // DriverClient is the client API for Driver service.
@@ -130,7 +130,7 @@ func _Driver_CancelJob_Handler(srv interface{}, ctx context.Context, dec func(in
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
 var Driver_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "grpcapi.Driver",
+	ServiceName: "driver.Driver",
 	HandlerType: (*DriverServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
@@ -147,11 +147,11 @@ var Driver_ServiceDesc = grpc.ServiceDesc{
 }
 
 const (
-	DriverHost_NegotiateStart_FullMethodName = "/grpcapi.DriverHost/NegotiateStart"
-	DriverHost_FinishActions_FullMethodName  = "/grpcapi.DriverHost/FinishActions"
-	DriverHost_FinishJob_FullMethodName      = "/grpcapi.DriverHost/FinishJob"
-	DriverHost_CacheSet_FullMethodName       = "/grpcapi.DriverHost/CacheSet"
-	DriverHost_CacheGet_FullMethodName       = "/grpcapi.DriverHost/CacheGet"
+	DriverHost_NegotiateStart_FullMethodName = "/driver.DriverHost/NegotiateStart"
+	DriverHost_FinishActions_FullMethodName  = "/driver.DriverHost/FinishActions"
+	DriverHost_FinishJob_FullMethodName      = "/driver.DriverHost/FinishJob"
+	DriverHost_CacheSet_FullMethodName       = "/driver.DriverHost/CacheSet"
+	DriverHost_CacheGet_FullMethodName       = "/driver.DriverHost/CacheGet"
 )
 
 // DriverHostClient is the client API for DriverHost service.
@@ -356,7 +356,7 @@ func _DriverHost_CacheGet_Handler(srv interface{}, ctx context.Context, dec func
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
 var DriverHost_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "grpcapi.DriverHost",
+	ServiceName: "driver.DriverHost",
 	HandlerType: (*DriverHostServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{

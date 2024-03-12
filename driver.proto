@@ -1,7 +1,7 @@
 syntax = "proto3";
-package grpcapi;
+package driver;
 
-option go_package = "github.com/cybroslabs/hes-1-drivers/grpcapi";
+option go_package = "github.com/cybroslabs/hes-1-apis/driver/go";
 
 import "google/protobuf/empty.proto";
 

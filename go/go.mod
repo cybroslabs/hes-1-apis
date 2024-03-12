@@ -1,4 +1,4 @@
-module github.com/cybroslabs/hes-1-apis/client-go
+module github.com/cybroslabs/hes-1-apis/go
 
 go 1.22.1
 
