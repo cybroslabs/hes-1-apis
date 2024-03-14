@@ -152,6 +152,7 @@ const (
 	DriverHost_FinishJob_FullMethodName      = "/driver.DriverHost/FinishJob"
 	DriverHost_CacheSet_FullMethodName       = "/driver.DriverHost/CacheSet"
 	DriverHost_CacheGet_FullMethodName       = "/driver.DriverHost/CacheGet"
+	DriverHost_QueueJob_FullMethodName       = "/driver.DriverHost/QueueJob"
 )
 
 // DriverHostClient is the client API for DriverHost service.
@@ -163,6 +164,7 @@ type DriverHostClient interface {
 	FinishJob(ctx context.Context, in *FinishJobRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	CacheSet(ctx context.Context, in *CacheSetRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	CacheGet(ctx context.Context, in *CacheGetRequest, opts ...grpc.CallOption) (*CacheGetResponse, error)
+	QueueJob(ctx context.Context, in *QueueJobRequest, opts ...grpc.CallOption) (*CommonResponse, error)
 }
 
 type driverHostClient struct {
@@ -218,6 +220,15 @@ func (c *driverHostClient) CacheGet(ctx context.Context, in *CacheGetRequest, op
 	return out, nil
 }
 
+func (c *driverHostClient) QueueJob(ctx context.Context, in *QueueJobRequest, opts ...grpc.CallOption) (*CommonResponse, error) {
+	out := new(CommonResponse)
+	err := c.cc.Invoke(ctx, DriverHost_QueueJob_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // DriverHostServer is the server API for DriverHost service.
 // All implementations must embed UnimplementedDriverHostServer
 // for forward compatibility
@@ -227,6 +238,7 @@ type DriverHostServer interface {
 	FinishJob(context.Context, *FinishJobRequest) (*emptypb.Empty, error)
 	CacheSet(context.Context, *CacheSetRequest) (*emptypb.Empty, error)
 	CacheGet(context.Context, *CacheGetRequest) (*CacheGetResponse, error)
+	QueueJob(context.Context, *QueueJobRequest) (*CommonResponse, error)
 	mustEmbedUnimplementedDriverHostServer()
 }
 
@@ -248,6 +260,9 @@ func (UnimplementedDriverHostServer) CacheSet(context.Context, *CacheSetRequest)
 }
 func (UnimplementedDriverHostServer) CacheGet(context.Context, *CacheGetRequest) (*CacheGetResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CacheGet not implemented")
+}
+func (UnimplementedDriverHostServer) QueueJob(context.Context, *QueueJobRequest) (*CommonResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method QueueJob not implemented")
 }
 func (UnimplementedDriverHostServer) mustEmbedUnimplementedDriverHostServer() {}
 
@@ -352,6 +367,24 @@ func _DriverHost_CacheGet_Handler(srv interface{}, ctx context.Context, dec func
 	return interceptor(ctx, in, info, handler)
 }
 
+func _DriverHost_QueueJob_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueueJobRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DriverHostServer).QueueJob(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: DriverHost_QueueJob_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DriverHostServer).QueueJob(ctx, req.(*QueueJobRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // DriverHost_ServiceDesc is the grpc.ServiceDesc for DriverHost service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -378,6 +411,10 @@ var DriverHost_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "CacheGet",
 			Handler:    _DriverHost_CacheGet_Handler,
+		},
+		{
+			MethodName: "QueueJob",
+			Handler:    _DriverHost_QueueJob_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
