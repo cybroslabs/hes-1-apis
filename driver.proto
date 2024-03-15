@@ -113,7 +113,8 @@ message QueueJobRequest {
     string job_id = 1;
     ConnectionInfo connection_info = 2;
     JobSpecification job_specification = 3;
-    repeated JobAction job_actions = 4;
+    string job_type = 4;
+    repeated JobAction job_actions = 5;
 }
 
 message StartJobRequest {
