@@ -16,7 +16,7 @@ service DriverHost {
   rpc FinishJob(FinishJobRequest) returns (google.protobuf.Empty);
   rpc CacheSet(CacheSetRequest) returns (google.protobuf.Empty);
   rpc CacheGet(CacheGetRequest) returns (CacheGetResponse);
-  rpc EnqueueJobs(QueueJobRequests) returns (CommonResponse);
+  rpc EnqueueJobs(QueueJobListRequest) returns (CommonResponse);
 }
 
 message FinishActionRequest {
@@ -173,6 +173,6 @@ message CommonResponse {
     ErrorCode result = 1;
 }
 
-message QueueJobRequests {
+message QueueJobListRequest {
     repeated QueueJobRequest requests = 1;
 }

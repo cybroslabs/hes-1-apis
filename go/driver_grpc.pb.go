@@ -164,7 +164,7 @@ type DriverHostClient interface {
 	FinishJob(ctx context.Context, in *FinishJobRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	CacheSet(ctx context.Context, in *CacheSetRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	CacheGet(ctx context.Context, in *CacheGetRequest, opts ...grpc.CallOption) (*CacheGetResponse, error)
-	EnqueueJobs(ctx context.Context, in *QueueJobRequests, opts ...grpc.CallOption) (*CommonResponse, error)
+	EnqueueJobs(ctx context.Context, in *QueueJobListRequest, opts ...grpc.CallOption) (*CommonResponse, error)
 }
 
 type driverHostClient struct {
@@ -220,7 +220,7 @@ func (c *driverHostClient) CacheGet(ctx context.Context, in *CacheGetRequest, op
 	return out, nil
 }
 
-func (c *driverHostClient) EnqueueJobs(ctx context.Context, in *QueueJobRequests, opts ...grpc.CallOption) (*CommonResponse, error) {
+func (c *driverHostClient) EnqueueJobs(ctx context.Context, in *QueueJobListRequest, opts ...grpc.CallOption) (*CommonResponse, error) {
 	out := new(CommonResponse)
 	err := c.cc.Invoke(ctx, DriverHost_EnqueueJobs_FullMethodName, in, out, opts...)
 	if err != nil {
@@ -238,7 +238,7 @@ type DriverHostServer interface {
 	FinishJob(context.Context, *FinishJobRequest) (*emptypb.Empty, error)
 	CacheSet(context.Context, *CacheSetRequest) (*emptypb.Empty, error)
 	CacheGet(context.Context, *CacheGetRequest) (*CacheGetResponse, error)
-	EnqueueJobs(context.Context, *QueueJobRequests) (*CommonResponse, error)
+	EnqueueJobs(context.Context, *QueueJobListRequest) (*CommonResponse, error)
 	mustEmbedUnimplementedDriverHostServer()
 }
 
@@ -261,7 +261,7 @@ func (UnimplementedDriverHostServer) CacheSet(context.Context, *CacheSetRequest)
 func (UnimplementedDriverHostServer) CacheGet(context.Context, *CacheGetRequest) (*CacheGetResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CacheGet not implemented")
 }
-func (UnimplementedDriverHostServer) EnqueueJobs(context.Context, *QueueJobRequests) (*CommonResponse, error) {
+func (UnimplementedDriverHostServer) EnqueueJobs(context.Context, *QueueJobListRequest) (*CommonResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method EnqueueJobs not implemented")
 }
 func (UnimplementedDriverHostServer) mustEmbedUnimplementedDriverHostServer() {}
@@ -368,7 +368,7 @@ func _DriverHost_CacheGet_Handler(srv interface{}, ctx context.Context, dec func
 }
 
 func _DriverHost_EnqueueJobs_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(QueueJobRequests)
+	in := new(QueueJobListRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -380,7 +380,7 @@ func _DriverHost_EnqueueJobs_Handler(srv interface{}, ctx context.Context, dec f
 		FullMethod: DriverHost_EnqueueJobs_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(DriverHostServer).EnqueueJobs(ctx, req.(*QueueJobRequests))
+		return srv.(DriverHostServer).EnqueueJobs(ctx, req.(*QueueJobListRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
