@@ -28,7 +28,7 @@ const (
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type DriverClient interface {
-	StartJob(ctx context.Context, in *StartJobRequest, opts ...grpc.CallOption) (*CommonResponse, error)
+	StartJob(ctx context.Context, in *StartJobRequest, opts ...grpc.CallOption) (Driver_StartJobClient, error)
 	CancelJob(ctx context.Context, in *CancelJobRequest, opts ...grpc.CallOption) (*CommonResponse, error)
 }
 
@@ -40,13 +40,36 @@ func NewDriverClient(cc grpc.ClientConnInterface) DriverClient {
 	return &driverClient{cc}
 }
 
-func (c *driverClient) StartJob(ctx context.Context, in *StartJobRequest, opts ...grpc.CallOption) (*CommonResponse, error) {
-	out := new(CommonResponse)
-	err := c.cc.Invoke(ctx, Driver_StartJob_FullMethodName, in, out, opts...)
+func (c *driverClient) StartJob(ctx context.Context, in *StartJobRequest, opts ...grpc.CallOption) (Driver_StartJobClient, error) {
+	stream, err := c.cc.NewStream(ctx, &Driver_ServiceDesc.Streams[0], Driver_StartJob_FullMethodName, opts...)
 	if err != nil {
 		return nil, err
 	}
-	return out, nil
+	x := &driverStartJobClient{stream}
+	if err := x.ClientStream.SendMsg(in); err != nil {
+		return nil, err
+	}
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	return x, nil
+}
+
+type Driver_StartJobClient interface {
+	Recv() (*JobProgressUpdate, error)
+	grpc.ClientStream
+}
+
+type driverStartJobClient struct {
+	grpc.ClientStream
+}
+
+func (x *driverStartJobClient) Recv() (*JobProgressUpdate, error) {
+	m := new(JobProgressUpdate)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
 }
 
 func (c *driverClient) CancelJob(ctx context.Context, in *CancelJobRequest, opts ...grpc.CallOption) (*CommonResponse, error) {
@@ -62,7 +85,7 @@ func (c *driverClient) CancelJob(ctx context.Context, in *CancelJobRequest, opts
 // All implementations must embed UnimplementedDriverServer
 // for forward compatibility
 type DriverServer interface {
-	StartJob(context.Context, *StartJobRequest) (*CommonResponse, error)
+	StartJob(*StartJobRequest, Driver_StartJobServer) error
 	CancelJob(context.Context, *CancelJobRequest) (*CommonResponse, error)
 	mustEmbedUnimplementedDriverServer()
 }
@@ -71,8 +94,8 @@ type DriverServer interface {
 type UnimplementedDriverServer struct {
 }
 
-func (UnimplementedDriverServer) StartJob(context.Context, *StartJobRequest) (*CommonResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method StartJob not implemented")
+func (UnimplementedDriverServer) StartJob(*StartJobRequest, Driver_StartJobServer) error {
+	return status.Errorf(codes.Unimplemented, "method StartJob not implemented")
 }
 func (UnimplementedDriverServer) CancelJob(context.Context, *CancelJobRequest) (*CommonResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CancelJob not implemented")
@@ -90,22 +113,25 @@ func RegisterDriverServer(s grpc.ServiceRegistrar, srv DriverServer) {
 	s.RegisterService(&Driver_ServiceDesc, srv)
 }
 
-func _Driver_StartJob_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(StartJobRequest)
-	if err := dec(in); err != nil {
-		return nil, err
+func _Driver_StartJob_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(StartJobRequest)
+	if err := stream.RecvMsg(m); err != nil {
+		return err
 	}
-	if interceptor == nil {
-		return srv.(DriverServer).StartJob(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: Driver_StartJob_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(DriverServer).StartJob(ctx, req.(*StartJobRequest))
-	}
-	return interceptor(ctx, in, info, handler)
+	return srv.(DriverServer).StartJob(m, &driverStartJobServer{stream})
+}
+
+type Driver_StartJobServer interface {
+	Send(*JobProgressUpdate) error
+	grpc.ServerStream
+}
+
+type driverStartJobServer struct {
+	grpc.ServerStream
+}
+
+func (x *driverStartJobServer) Send(m *JobProgressUpdate) error {
+	return x.ServerStream.SendMsg(m)
 }
 
 func _Driver_CancelJob_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -134,22 +160,22 @@ var Driver_ServiceDesc = grpc.ServiceDesc{
 	HandlerType: (*DriverServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "StartJob",
-			Handler:    _Driver_StartJob_Handler,
-		},
-		{
 			MethodName: "CancelJob",
 			Handler:    _Driver_CancelJob_Handler,
 		},
 	},
-	Streams:  []grpc.StreamDesc{},
+	Streams: []grpc.StreamDesc{
+		{
+			StreamName:    "StartJob",
+			Handler:       _Driver_StartJob_Handler,
+			ServerStreams: true,
+		},
+	},
 	Metadata: "driver.proto",
 }
 
 const (
 	DriverHost_NegotiateStart_FullMethodName = "/driver.DriverHost/NegotiateStart"
-	DriverHost_FinishActions_FullMethodName  = "/driver.DriverHost/FinishActions"
-	DriverHost_FinishJob_FullMethodName      = "/driver.DriverHost/FinishJob"
 	DriverHost_CacheSet_FullMethodName       = "/driver.DriverHost/CacheSet"
 	DriverHost_CacheGet_FullMethodName       = "/driver.DriverHost/CacheGet"
 	DriverHost_EnqueueJobs_FullMethodName    = "/driver.DriverHost/EnqueueJobs"
@@ -160,8 +186,6 @@ const (
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type DriverHostClient interface {
 	NegotiateStart(ctx context.Context, in *NegotiateRequest, opts ...grpc.CallOption) (*CommonResponse, error)
-	FinishActions(ctx context.Context, in *FinishActionRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
-	FinishJob(ctx context.Context, in *FinishJobRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	CacheSet(ctx context.Context, in *CacheSetRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	CacheGet(ctx context.Context, in *CacheGetRequest, opts ...grpc.CallOption) (*CacheGetResponse, error)
 	EnqueueJobs(ctx context.Context, in *QueueJobListRequest, opts ...grpc.CallOption) (*CommonResponse, error)
@@ -178,24 +202,6 @@ func NewDriverHostClient(cc grpc.ClientConnInterface) DriverHostClient {
 func (c *driverHostClient) NegotiateStart(ctx context.Context, in *NegotiateRequest, opts ...grpc.CallOption) (*CommonResponse, error) {
 	out := new(CommonResponse)
 	err := c.cc.Invoke(ctx, DriverHost_NegotiateStart_FullMethodName, in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *driverHostClient) FinishActions(ctx context.Context, in *FinishActionRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
-	out := new(emptypb.Empty)
-	err := c.cc.Invoke(ctx, DriverHost_FinishActions_FullMethodName, in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *driverHostClient) FinishJob(ctx context.Context, in *FinishJobRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
-	out := new(emptypb.Empty)
-	err := c.cc.Invoke(ctx, DriverHost_FinishJob_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -234,8 +240,6 @@ func (c *driverHostClient) EnqueueJobs(ctx context.Context, in *QueueJobListRequ
 // for forward compatibility
 type DriverHostServer interface {
 	NegotiateStart(context.Context, *NegotiateRequest) (*CommonResponse, error)
-	FinishActions(context.Context, *FinishActionRequest) (*emptypb.Empty, error)
-	FinishJob(context.Context, *FinishJobRequest) (*emptypb.Empty, error)
 	CacheSet(context.Context, *CacheSetRequest) (*emptypb.Empty, error)
 	CacheGet(context.Context, *CacheGetRequest) (*CacheGetResponse, error)
 	EnqueueJobs(context.Context, *QueueJobListRequest) (*CommonResponse, error)
@@ -248,12 +252,6 @@ type UnimplementedDriverHostServer struct {
 
 func (UnimplementedDriverHostServer) NegotiateStart(context.Context, *NegotiateRequest) (*CommonResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method NegotiateStart not implemented")
-}
-func (UnimplementedDriverHostServer) FinishActions(context.Context, *FinishActionRequest) (*emptypb.Empty, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method FinishActions not implemented")
-}
-func (UnimplementedDriverHostServer) FinishJob(context.Context, *FinishJobRequest) (*emptypb.Empty, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method FinishJob not implemented")
 }
 func (UnimplementedDriverHostServer) CacheSet(context.Context, *CacheSetRequest) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CacheSet not implemented")
@@ -291,42 +289,6 @@ func _DriverHost_NegotiateStart_Handler(srv interface{}, ctx context.Context, de
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(DriverHostServer).NegotiateStart(ctx, req.(*NegotiateRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _DriverHost_FinishActions_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(FinishActionRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(DriverHostServer).FinishActions(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: DriverHost_FinishActions_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(DriverHostServer).FinishActions(ctx, req.(*FinishActionRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _DriverHost_FinishJob_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(FinishJobRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(DriverHostServer).FinishJob(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: DriverHost_FinishJob_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(DriverHostServer).FinishJob(ctx, req.(*FinishJobRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -395,14 +357,6 @@ var DriverHost_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "NegotiateStart",
 			Handler:    _DriverHost_NegotiateStart_Handler,
-		},
-		{
-			MethodName: "FinishActions",
-			Handler:    _DriverHost_FinishActions_Handler,
-		},
-		{
-			MethodName: "FinishJob",
-			Handler:    _DriverHost_FinishJob_Handler,
 		},
 		{
 			MethodName: "CacheSet",
