@@ -152,7 +152,7 @@ const (
 	DriverHost_FinishJob_FullMethodName      = "/driver.DriverHost/FinishJob"
 	DriverHost_CacheSet_FullMethodName       = "/driver.DriverHost/CacheSet"
 	DriverHost_CacheGet_FullMethodName       = "/driver.DriverHost/CacheGet"
-	DriverHost_QueueJob_FullMethodName       = "/driver.DriverHost/QueueJob"
+	DriverHost_EnqueueJobs_FullMethodName    = "/driver.DriverHost/EnqueueJobs"
 )
 
 // DriverHostClient is the client API for DriverHost service.
@@ -164,7 +164,7 @@ type DriverHostClient interface {
 	FinishJob(ctx context.Context, in *FinishJobRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	CacheSet(ctx context.Context, in *CacheSetRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	CacheGet(ctx context.Context, in *CacheGetRequest, opts ...grpc.CallOption) (*CacheGetResponse, error)
-	QueueJob(ctx context.Context, in *QueueJobRequest, opts ...grpc.CallOption) (*CommonResponse, error)
+	EnqueueJobs(ctx context.Context, in *QueueJobRequests, opts ...grpc.CallOption) (*CommonResponse, error)
 }
 
 type driverHostClient struct {
@@ -220,9 +220,9 @@ func (c *driverHostClient) CacheGet(ctx context.Context, in *CacheGetRequest, op
 	return out, nil
 }
 
-func (c *driverHostClient) QueueJob(ctx context.Context, in *QueueJobRequest, opts ...grpc.CallOption) (*CommonResponse, error) {
+func (c *driverHostClient) EnqueueJobs(ctx context.Context, in *QueueJobRequests, opts ...grpc.CallOption) (*CommonResponse, error) {
 	out := new(CommonResponse)
-	err := c.cc.Invoke(ctx, DriverHost_QueueJob_FullMethodName, in, out, opts...)
+	err := c.cc.Invoke(ctx, DriverHost_EnqueueJobs_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -238,7 +238,7 @@ type DriverHostServer interface {
 	FinishJob(context.Context, *FinishJobRequest) (*emptypb.Empty, error)
 	CacheSet(context.Context, *CacheSetRequest) (*emptypb.Empty, error)
 	CacheGet(context.Context, *CacheGetRequest) (*CacheGetResponse, error)
-	QueueJob(context.Context, *QueueJobRequest) (*CommonResponse, error)
+	EnqueueJobs(context.Context, *QueueJobRequests) (*CommonResponse, error)
 	mustEmbedUnimplementedDriverHostServer()
 }
 
@@ -261,8 +261,8 @@ func (UnimplementedDriverHostServer) CacheSet(context.Context, *CacheSetRequest)
 func (UnimplementedDriverHostServer) CacheGet(context.Context, *CacheGetRequest) (*CacheGetResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CacheGet not implemented")
 }
-func (UnimplementedDriverHostServer) QueueJob(context.Context, *QueueJobRequest) (*CommonResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method QueueJob not implemented")
+func (UnimplementedDriverHostServer) EnqueueJobs(context.Context, *QueueJobRequests) (*CommonResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method EnqueueJobs not implemented")
 }
 func (UnimplementedDriverHostServer) mustEmbedUnimplementedDriverHostServer() {}
 
@@ -367,20 +367,20 @@ func _DriverHost_CacheGet_Handler(srv interface{}, ctx context.Context, dec func
 	return interceptor(ctx, in, info, handler)
 }
 
-func _DriverHost_QueueJob_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(QueueJobRequest)
+func _DriverHost_EnqueueJobs_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueueJobRequests)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(DriverHostServer).QueueJob(ctx, in)
+		return srv.(DriverHostServer).EnqueueJobs(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: DriverHost_QueueJob_FullMethodName,
+		FullMethod: DriverHost_EnqueueJobs_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(DriverHostServer).QueueJob(ctx, req.(*QueueJobRequest))
+		return srv.(DriverHostServer).EnqueueJobs(ctx, req.(*QueueJobRequests))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -413,8 +413,8 @@ var DriverHost_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _DriverHost_CacheGet_Handler,
 		},
 		{
-			MethodName: "QueueJob",
-			Handler:    _DriverHost_QueueJob_Handler,
+			MethodName: "EnqueueJobs",
+			Handler:    _DriverHost_EnqueueJobs_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

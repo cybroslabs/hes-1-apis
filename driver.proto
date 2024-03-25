@@ -109,10 +109,6 @@ message CancelJobRequest {
     string job_id = 1;
 }
 
-message QueueJobRequests {
-    repeated QueueJobRequest requests = 1;
-}
-
 message QueueJobRequest {
     string job_id = 1;
     ConnectionInfo connection_info = 2;
@@ -175,4 +171,8 @@ enum ErrorCode {
 
 message CommonResponse {
     ErrorCode result = 1;
+}
+
+message QueueJobRequests {
+    repeated QueueJobRequest requests = 1;
 }
