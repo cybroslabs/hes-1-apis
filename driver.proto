@@ -123,8 +123,21 @@ message ConnectionInfo {
     map<string,AttributeValue> attributes = 2;
 }
 
+enum JobPriority {
+    PRIORITY_0 = 0;
+    PRIORITY_1 = 1;
+    PRIORITY_2 = 2;
+    PRIORITY_3 = 3;
+    PRIORITY_4 = 4;
+    PRIORITY_5 = 5;
+    PRIORITY_6 = 6;
+    PRIORITY_7 = 7;
+    PRIORITY_8 = 8;
+}
+
 message JobSpecification {
     int64 max_duration = 1;
+    optional JobPriority priority = 4;
 }
 
 enum AttributeType {
