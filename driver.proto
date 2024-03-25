@@ -6,24 +6,23 @@ option go_package = "github.com/cybroslabs/hes-1-apis/driver/go";
 import "google/protobuf/empty.proto";
 
 service Driver {
-  rpc StartJob(StartJobRequest) returns (CommonResponse);
+  rpc StartJob(StartJobRequest) returns (stream JobProgressUpdate);
   rpc CancelJob(CancelJobRequest) returns (CommonResponse);
 }
 
 service DriverHost {
   rpc NegotiateStart(NegotiateRequest) returns (CommonResponse);
-  rpc FinishActions(FinishActionRequest) returns (google.protobuf.Empty);
-  rpc FinishJob(FinishJobRequest) returns (google.protobuf.Empty);
   rpc CacheSet(CacheSetRequest) returns (google.protobuf.Empty);
   rpc CacheGet(CacheGetRequest) returns (CacheGetResponse);
   rpc EnqueueJobs(QueueJobListRequest) returns (CommonResponse);
 }
 
-message FinishActionRequest {
+message JobProgressUpdate {
     string job_id = 1;
-    string action_id = 2;
-    ErrorCode result = 3;
-    ActionData data = 4;
+    ErrorCode code = 2;
+    optional bool jobFinished = 3;
+    optional string action_id = 4;
+    optional ActionData data = 5;
 }
 
 message ActionData {
@@ -62,11 +61,6 @@ message MeasuredValue {
         int64 int_value = 3;
     }
     int32 exponent = 4;
-}
-
-message FinishJobRequest {
-    string job_id = 1;
-    ErrorCode result = 2;
 }
 
 message CacheSetRequest {
