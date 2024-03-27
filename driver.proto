@@ -137,7 +137,7 @@ enum JobPriority {
 
 message JobSpecification {
     int64 max_duration = 1;
-    optional JobPriority priority = 4;
+    JobPriority priority = 2;
 }
 
 enum AttributeType {
